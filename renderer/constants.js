@@ -17,7 +17,8 @@ const appTypes = {
     defaults: {
       type: 'create-react-app',
       port: 3000,
-      run: 'run start'
+      run: 'run start',
+      cmd: 'npm'
     }
   },
   next: {
@@ -26,7 +27,8 @@ const appTypes = {
     defaults: {
       type: 'create-next-app',
       port: 3000,
-      run: 'run dev'
+      run: 'run dev',
+      cmd: 'npm'
     }
   },
   gatsby: {
@@ -35,7 +37,8 @@ const appTypes = {
     defaults: {
       type: 'gatsby-cli',
       port: 8000,
-      run: 'run develop'
+      run: 'run develop',
+      cmd: 'npm'
     }
   },
   razzle: {
@@ -44,7 +47,8 @@ const appTypes = {
     defaults: {
       type: 'create-razzle-app',
       port: 3000,
-      run: 'run start'
+      run: 'run start',
+      cmd: 'npm'
     }
   },
   nuxt: {
@@ -53,7 +57,18 @@ const appTypes = {
     defaults: {
       type: 'create-vue-app',
       port: 8080,
-      run: 'run serve'
+      run: 'run serve',
+      cmd: 'npm'
+    }
+  },
+  elm: {
+    name: 'Elm App',
+    install: 'create-elm-app',
+    defaults: {
+      type: 'create-elm-app',
+      port: 3000,
+      run: 'start',
+      cmd: 'elm-app'
     }
   }
 }
