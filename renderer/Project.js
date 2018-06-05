@@ -39,7 +39,12 @@ const getPort = str => {
   return parseInt(url.replace(/[a-z:]/g, ''))
 }
 
-const InstallForm = ({ name, value, disabled, onChange, onSubmit, isElm }) =>
+const readElmPkg = Promise.resolve({
+  name: 'elm-lang/core',
+  version: '5.0.0 <= v < 6.0.0'
+})
+
+const InstallForm = ({ name, value, disabled, onChange, onSubmit }) =>
   h(
     Flex,
     {
@@ -132,31 +137,36 @@ class Project extends React.Component {
       update(saveThumbnail(img))
     }
 
+    this.handleChange = e => {
+      const { name, value } = e.target
+      this.setState({ [name]: value })
+    }
+
     this.readPkg = async () => {
       const { update, project } = this.props
       const { dirname } = project
       if (!dirname) return
-      const { pkg } = await readPkg({ cwd: dirname })
-      update({ pkg })
-    }
 
-    this.handleChange = e => {
-      const { name, value } = e.target
-      this.setState({ [name]: value })
+      const { pkg } =
+        project.cmd === 'elm-app'
+          ? await readElmPkg({ cwd: dirname })
+          : await readPkg({ cwd: dirname })
+      update({ pkg })
     }
 
     this.handleInstallSubmit = e => {
       e.preventDefault()
       const {
         update,
-        project: { dirname }
+        project: { dirname, cmd }
       } = this.props
       const { packages } = this.state
       if (!packages) return
       log.info('installing packages', packages.split(' '))
       this.setState({ installing: true })
-      update(pushLog('npm install ' + packages))
-      run('npm', ['install', ...packages.split(' ')], {
+      const installCmd = project.cmd ? project.cmd : 'npm'
+      update(pushLog(installCmd + ' install ' + packages))
+      run(installCmd, ['install', ...packages.split(' ')], {
         cwd: dirname,
         onLog: msg => {
           update(pushLog(msg))
@@ -189,7 +199,7 @@ class Project extends React.Component {
   render() {
     const { project, pkg, update } = this.props
     const { child, listening, installing, packages } = this.state
-
+    console.log(project)
     if (!project) return false
     const { name, dirname, created, port = 3000 } = project
     const url = `http://localhost:${port}`
@@ -328,7 +338,11 @@ class Project extends React.Component {
           h(
             Box,
             { width: 1, px: 3 },
-            h(Heading, { is: 'h3', mr: 3, fontSize: 3 }, 'npm'),
+            h(
+              Heading,
+              { is: 'h3', mr: 3, fontSize: 3 },
+              project.cmd === 'elm-app' ? 'elm-package' : 'npm'
+            ),
             h(InstallForm, {
               disabled: installing,
               name: 'packages',
