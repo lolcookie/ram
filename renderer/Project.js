@@ -6,6 +6,9 @@ const openBrowser = require('react-dev-utils/openBrowser')
 const launchEditor = require('react-dev-utils/launchEditor.js')
 const killPort = require('kill-port')
 const readPkg = require('read-pkg-up')
+const fs = require('fs')
+const util = require('util')
+
 const {
   Box,
   Flex,
@@ -39,10 +42,14 @@ const getPort = str => {
   return parseInt(url.replace(/[a-z:]/g, ''))
 }
 
-const readElmPkg = Promise.resolve({
-  name: 'elm-lang/core',
-  version: '5.0.0 <= v < 6.0.0'
-})
+// TODO: Fix this
+const readElmPkg = ({ cwd }) =>
+  util
+    .promisify(fs.readFile)(cwd + '/elm-package.json', 'utf')
+    .then(JSON.parse)
+    .then(({ dependencies }) => ({
+      pkg: Object.keys(dependencies).map(k => ({ name: k, version: dependencies[k] }))
+    }))
 
 const InstallForm = ({ name, value, disabled, onChange, onSubmit }) =>
   h(
@@ -144,7 +151,7 @@ class Project extends React.Component {
 
     this.readPkg = async () => {
       const { update, project } = this.props
-      const { dirname } = project
+      const { dirname, cmd } = project
       if (!dirname) return
 
       const { pkg } =
@@ -158,15 +165,14 @@ class Project extends React.Component {
       e.preventDefault()
       const {
         update,
-        project: { dirname, cmd }
+        project: { dirname, cmd, installFlag }
       } = this.props
       const { packages } = this.state
       if (!packages) return
       log.info('installing packages', packages.split(' '))
       this.setState({ installing: true })
-      const installCmd = project.cmd ? project.cmd : 'npm'
-      update(pushLog(installCmd + ' install ' + packages))
-      run(installCmd, ['install', ...packages.split(' ')], {
+      update(pushLog(cmd + ' install ' + packages))
+      run(cmd, ['install', ...packages.split(' '), installFlag], {
         cwd: dirname,
         onLog: msg => {
           update(pushLog(msg))
@@ -199,7 +205,7 @@ class Project extends React.Component {
   render() {
     const { project, pkg, update } = this.props
     const { child, listening, installing, packages } = this.state
-    console.log(project)
+
     if (!project) return false
     const { name, dirname, created, port = 3000 } = project
     const url = `http://localhost:${port}`

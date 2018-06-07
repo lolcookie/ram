@@ -68,6 +68,7 @@ const appTypes = {
       type: 'create-elm-app',
       port: 3000,
       run: 'start',
+      installFlag: '-y',
       cmd: 'elm-app'
     }
   }
